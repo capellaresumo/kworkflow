@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Set required variables
-TARGET="qemu" 
 EASY_KERNEL_WORKFLOW=${EASY_KERNEL_WORKFLOW:-"kw"}
 src_script_path=${src_script_path:-"$HOME/.config/$EASY_KERNEL_WORKFLOW/src"}
 external_script_path=${external_script_path:-"$HOME/.config/$EASY_KERNEL_WORKFLOW/external"}
@@ -13,14 +12,6 @@ function kw()
 {
   action=$1
   shift
-
-  while getopts 'lv' c
-  do
-    case $c in
-      l) TARGET="host" ;;
-      v) TARGET="qemu" ;;
-    esac
-  done
 
   case "$action" in
     mount)
@@ -75,8 +66,7 @@ function kw()
     new|n)
       (
         . $src_script_path/mk.sh --source-only
-
-        vm_new_release_deploy
+        new_release_deploy $@
       )
       ;;
     bi)
@@ -119,6 +109,13 @@ function kw()
         . $src_script_path/utils.sh --source-only
 
         kworkflow-help
+      )
+      ;;
+    set-deploy-target)
+      (
+        . $src_script_path/commons.sh --source-only
+
+        set_deploy_target $@
       )
       ;;
     *)
