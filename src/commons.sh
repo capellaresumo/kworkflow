@@ -1,27 +1,11 @@
-. $src_script_path/cfg.sfh --source-only
+. $src_script_path/cfg.sh --source-only
 . $src_script_path/miscellaneous.sh --source-only
 
 KWORKFLOW_CONFIG_PATH=$PWD/kworkflow.config
-
-BASE=$HOME/p/linux-trees
-MOUNT_POINT=$HOME/p/mount
-BUILD_DIR=$BASE/build-linux
-
-QEMU_ARCH="x86_64"
-QEMU="qemu-system-${QEMU_ARCH}"
-QEMU_OPTS="-enable-kvm -smp 2 -m 1024"
-VDISK="$HOME/p/virty.qcow2"
-QEMU_MNT="/mnt/qemu"
-DEFAULT_PORT="2222"
-DEFAULT_IP="127.0.0.1"
-DEFAULT_DEPLOY_TARGET="guest"
-
-TARGET="qemu"
-
-BASHPATH=/bin/bash
+KWORKFLOW_CONFIG_DEFAULT_PATH="$HOME/.config/kw/etc/kworkflow.config"
 
 # Default configuration
-declare -A configurations=( ["ip"]="127.0.0.1" ["port"]="2222" )
+declare -A configurations=( )
 
 function get_deploy_target()
 {
@@ -39,46 +23,42 @@ function get_deploy_target()
 
 function show_variables()
 {
+  check_local_configuration
+
   say "Global values:"
 
-  echo -e "\tBASE: $BASE"
-  echo -e "\tBUILD_DIR: $BUILD_DIR"
-  echo -e "\tQEMU ARCH: $QEMU_ARCH"
-  echo -e "\tQEMU COMMAND: $QEMU"
-  echo -e "\tQEMU MOUNT POINT: $QEMU_MNT"
-  echo -e "\tTARGET: $TARGET"
-
-  check_local_configuration
+  echo -e "\tBASE: ${configurations[base]}"
+  echo -e "\tBUILD_DIR: ${configurations[build_dir]}"
+  echo -e "\tQEMU ARCH: ${configurations[qemu_arch]}"
+  echo -e "\tQEMU COMMAND: ${configurations[qemu]}"
+  echo -e "\tQEMU MOUNT POINT: ${configurations[qemu_mnt]}"
 
   if [ $? -eq 1 ] ; then
     say "There is no kworkflow.conf, adopt default values for:"
-    echo -e "\tQEMU OPTIONS: $QEMU_OPTS"
-    echo -e "\tVDISK: $VDISK"
-    echo -e "\tDEPLOY TARGET: $DEFAULT_DEPLOY_TARGET"
   else
     say "kw found a kworkflow.conf file. Read options:"
-    echo -en "\tQEMU OPTIONS: ${configurations[qemu_hw_options]}"
-    echo     "${configurations[qemu_net_options]}"
-    echo -e "\tVDISK: ${configurations[qemu_path_image]}"
-    echo -e "\tDEPLOY TARGET: ${configurations[deploy_target]}"
   fi
+  echo -en "\tQEMU OPTIONS: ${configurations[qemu_hw_options]}"
+  echo     "${configurations[qemu_net_options]}"
+  echo -e "\tVDISK: ${configurations[qemu_path_image]}"
+  echo -e "\tDEPLOY TARGET: ${configurations[deploy_target]}"
 }
 
 function check_local_configuration()
 {
-  # File does not exist, use default configuration
-  if [ ! -f $KWORKFLOW_CONFIG_PATH ] ; then
-    configurations=(
-      [qemu_path_image]=$VDISK
-      [qemu_hw_options]=$QEMU_OPT
-      [qemu_net_options]=""
-      [port]=$DEFAULT_PORT
-      [ip]=$DEFAULT_IP
-      [deploy_target]=$DEFAULT_DEPLOY_TARGET
-    )
-    return 1
-  fi
+  load_configuration $KWORKFLOW_CONFIG_DEFAULT_PATH
+  local result=1
 
+  # Check if local config exist and use it
+  if [ -f "$KWORKFLOW_CONFIG_PATH" ]; then
+    load_configuration $KWORKFLOW_CONFIG_PATH
+    result=0
+  fi
+  return $result
+}
+
+function load_configuration()
+{
   while read line
   do
     if echo $line | grep -F = &>/dev/null
@@ -86,7 +66,7 @@ function check_local_configuration()
       varname=$(echo $line | cut -d '=' -f 1 | tr -d '[:space:]')
       configurations[$varname]=$(echo "$line" | cut -d '=' -f 2-)
     fi
-  done < $config_path
+  done < $1
 }
 
 function set_deploy_target()
@@ -100,4 +80,9 @@ function set_deploy_target()
   # Set file and loaded configurations
   set_configuration_variable "deploy_target" "$1"
   configurations[deploy_target]=$1
+}
+
+function set_configuration_variable()
+{
+  cfg_write $KWORKFLOW_CONFIG_DEFAULT_PATH $1 $2
 }
