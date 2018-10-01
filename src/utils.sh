@@ -1,6 +1,6 @@
 function kworkflow-help()
 {
-  echo -e "Usage: kw [-l|-v] cmd"
+  echo -e "Usage: kw cmd"
 
   echo -e "\nThe current supported targets are:\n" \
        "\t -g - guest machine\n" \
@@ -8,7 +8,7 @@ function kworkflow-help()
 
   echo -e "\nCommands:\n" \
     "\tbuild,b - Build Kernel and modules\n" \
-    "\tinstall,i - Install modules\n" \
+    "\tinstall,i [-g|-h] - Install modules\n" \
     "\tbi - Build and install modules\n" \
     "\tprepare,p - Deploy basic environment in the VM\n" \
     "\tnew,n [-g|-h] - Install new Kernel image\n" \

@@ -38,7 +38,7 @@ function host_new_release_deploy
 }
 
 function new_release_deploy
-{  
+{
   target=$(get_deploy_target $@)
 
   if [ "$target" == "host" ]; then
@@ -82,14 +82,15 @@ function mk_build
 function mk_install
 {
   check_local_configuration
+  target=$(get_deploy_target $@)
 
   # FIXME: validate arch and action
-  if [ ${configurations[target]} == "arm" ] ; then
+  if [ "$target" == "arm" ] ; then
     export ARCH=arm CROSS_COMPILE="ccache arm-linux-gnu-"
   fi
 
-  case "${configurations[target]}" in
-    qemu)
+  case "$target" in
+    guest)
       vm_modules_install
       ;;
     host)

@@ -60,7 +60,7 @@ function kw()
       (
         . $src_script_path/mk.sh --source-only
 
-        mk_install
+        mk_install $@
       )
       ;;
     new|n)
@@ -129,4 +129,3 @@ function kw()
       ;;
   esac
 }
-
